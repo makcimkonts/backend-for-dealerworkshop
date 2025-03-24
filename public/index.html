@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Фронтенд для сервера</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f4f4f9;
+
+        }
+        h1, h2 {
+            color: #333;
+            text-align: center;
+        }
+        form {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            max-width: 400px;
+            margin: 20px auto;
+        }
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            width: 100%;
+            padding: 10px;
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #218838;
+        }
+        .message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+        }
+        .hidden {
+            display: none;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            border: 1px solid #ddd;
+            text-align: left;
+        }
+        th {
+            background-color: #28a745;
+            color: white;
+        }
+        tr:nth-child(even) {
+            background-color: #f2f2f2;
+        }
+        .profile-container {
+    display: flex; /* Розміщує блоки в рядок */
+    gap: 20px; /* Відстань між блоками */
+    align-items: flex-start; /* Вирівнює елементи по верхньому краю */
+}
+
+.profile-section {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 300px; /* Фіксована ширина */
+}
+.selected-services {
+        margin-top: 20px;
+        padding: 20px;
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .selected-services ul {
+        list-style: none;
+        padding: 0;
+    }
+
+    .selected-services ul li {
+        padding: 10px;
+        border-bottom: 1px solid #ddd;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .selected-services ul li:last-child {
+        border-bottom: none;
+    }
+
+    .remove-service-button {
+        background-color: #dc3545;
+        color: white;
+        border: none;
+        padding: 5px 10px;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+
+    .remove-service-button:hover {
+        background-color: #c82333;
+    }
+
+    .total-price {
+        font-weight: bold;
+        margin-top: 10px;
+    }
+    .order-item {
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-bottom: 10px;
+}
+
+button {
+    padding: 8px 15px;
+    margin: 5px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
+}
+
+button:not(:disabled) {
+    background-color: #4CAF50;
+    color: white;
+}
+
+button:not(:disabled):hover {
+    background-color: #45a049;
+}
+
+    </style>
+</head>
+<body>
+   <!-- Форма входу -->
+<div id="authSection">
+    <h1>Вхід</h1>
+    <form id="loginForm">
+        <label for="loginLogin">Логін:</label>
+        <input type="text" id="loginLogin" name="login" required>
+        <label for="loginPassword">Пароль:</label>
+        <input type="password" id="loginPassword" name="password" required>
+        <button type="submit">Увійти</button>
+    </form>
+    <div id="loginMessage" class="message"></div>
+    <h1>Реєстрація</h1>
+    <form id="registerForm">
+        <label for="registerLogin">Логін:</label>
+        <input type="text" id="registerLogin" name="login" required>
+        
+        <label for="registerPassword">Пароль:</label>
+        <input type="password" id="registerPassword" name="password" required>
+        
+        <label for="registerConfirmPassword">Підтвердження пароля:</label>
+        <input type="password" id="registerConfirmPassword" name="confirmPassword" required>
+        
+        <label for="registerFirstName">Ім'я:</label>
+        <input type="text" id="registerFirstName" name="first_name" required>
+        
+        <label for="registerLastName">Прізвище:</label>
+        <input type="text" id="registerLastName" name="last_name" required>
+        
+        <label for="registerVinCode">VIN-код:</label>
+        <input type="text" id="registerVinCode" name="vin_code" required>
+        
+        <button type="submit">Зареєструватися</button>
+    </form>
+    <div id="registerMessage" class="message"></div>
+
+    
+</div>
+
+<!-- Профіль -->
+
+<div id="profileSection" class="hidden">
+    <button id="logoutButton">Вийти</button>
+    <h1>Профіль</h1>
+    <p>Ласкаво просимо, <span id="userName"></span>!</p>
+    
+
+    <!-- Контейнер для розміщення блоків в рядок -->
+    <div class="profile-container">
+        <!-- Інформація про користувача -->
+        <div class="profile-section">
+            <h2>Інформація</h2>
+            <p><strong>Ім'я:</strong> <span id="userFirstName"></span></p>
+            <p><strong>Прізвище:</strong> <span id="userLastName"></span></p>
+            <p><strong>VIN-код:</strong> <span id="userVinCode"></span></p>
+            <p><strong>Роль:</strong> <span id="userRole"></span></p>
+            <p><strong>Баланс:</strong> <span id="userBalance"></span> грн</p>
+        </div>
+
+        <!-- Оновлення профілю -->
+        <div class="profile-section">
+            <h2>Оновити профіль</h2>
+            <form id="updateProfileForm">
+                <label for="updateFirstName">Ім'я:</label>
+                <input type="text" id="updateFirstName" name="first_name" required>
+
+                <label for="updateLastName">Прізвище:</label>
+                <input type="text" id="updateLastName" name="last_name" required>
+
+                <label for="updateVinCode">VIN-код:</label>
+                <input type="text" id="updateVinCode" name="vin_code" required>
+
+                <button type="submit">Оновити профіль</button>
+            </form>
+        </div>
+
+        <!-- Зміна паролю -->
+        <div class="profile-section">
+            <h2>Змінити пароль</h2>
+            <form id="updatePasswordForm">
+                <label for="oldPassword">Старий пароль:</label>
+                <input type="password" id="oldPassword" name="old_password" required>
+
+                <label for="newPassword">Новий пароль:</label>
+                <input type="password" id="newPassword" name="new_password" required>
+
+                <button type="submit">Змінити пароль</button>
+            </form>
+        </div>
+
+        <!-- Поповнення балансу -->
+        <div class="profile-section">
+            <h2>Поповнити баланс</h2>
+            <form id="topUpBalanceForm">
+                <label for="topUpAmount">Сума поповнення:</label>
+                <input type="number" id="topUpAmount" name="amount" required>
+                <button type="submit">Поповнити баланс</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Історія замовлень -->
+    <h2>Історія замовлень</h2>
+    <table id="ordersTable">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Сервіс</th>
+                <th>Статус</th>
+                <th>Ціна</th>
+                <th>Дії</th>
+            </tr>
+        </thead>
+        <tbody></tbody>
+    </table>
+</table>
+<div id="orderMessage" class="message"></div>
+    <!-- Доступні сервіси -->
+<h2>Доступні сервіси</h2>
+
+<table id="servicesTable">
+    <thead>
+        <tr>
+            <th>ID</th>
+            <th>Назва</th>
+            <th>Опис</th>
+            <th>Ціна</th>
+            <th>VIN-код</th>
+            <th>Дії</th>
+        </tr>
+    </thead>
+    <tbody>
+        <!-- Дані будуть додані сюди -->
+    </tbody>
+</table>
+    <!-- Обрані сервіси -->
+    <div class="selected-services">
+        <h3>Обрані сервіси</h3>
+        <ul id="selectedServicesList">
+            <!-- Обрані сервіси будуть додані сюди -->
+        </ul>
+        <p class="total-price">Загальна вартість: <span id="totalPrice">0</span> грн</p>
+        <button id="createOrderButton">Створити замовлення</button>
+    </div>
+</div>
+
+    <script src = "js.js"></script>
+</body>
+</html>

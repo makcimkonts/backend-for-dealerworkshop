@@ -30,4 +30,8 @@ router.post('/validate', orderController.validateServiceByVin);
 // Завершення замовлення
 router.post('/:orderId/complete', authenticateToken, authenticateManager, orderController.completeOrder);
 
+
+router.get('/order-history/:id', authenticateToken,authenticateManager, orderController.getOrderHistory);
+
+
 module.exports = router;

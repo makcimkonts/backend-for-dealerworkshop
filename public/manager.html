@@ -29,11 +29,28 @@
             <!-- Users will be dynamically added here -->
         </tbody>
     </table>
-    
-    
 
-    <script src="app.js">
-        window.onload = getUsers;
-    </script>
+
+    <div class="container">
+        <h1>Управління ордерами</h1>
+        
+        <button class="create-order-btn" onclick="createOrder()">Створити новий ордер</button>
+
+        <table id="ordersTable">
+            <thead>
+                <tr>
+                    <th>Послуга</th>
+                    <th>VIN код</th>
+                    <th>Статус</th>
+                    <th>Ціна</th>
+                    <th>Дії</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Ордери будуть додаватися сюди через JavaScript -->
+            </tbody>
+        </table>
+    </div>
+    <script src="app.js"></script>
 </body>
 </html>

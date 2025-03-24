@@ -238,6 +238,130 @@ async function deleteUser(userId) {
         alert('Failed to delete user');
     }
 }
+// Функція для отримання всіх ордерів
+async function getOrders() {
+    try {
+        const response = await fetch(`${API_BASE_URL}orders/`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            }
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch orders');
+        }
+
+        const data = await response.json();
+        const ordersTable = document.getElementById('ordersTable').getElementsByTagName('tbody')[0];
+        ordersTable.innerHTML = ''; // Очищаємо таблицю перед заповненням
+
+        data.forEach(order => {
+            const row = ordersTable.insertRow();
+            row.setAttribute('data-id', order.id); // Додаємо ID ордера
+            row.innerHTML = `
+                <td class="editable" data-field="service">${order.service}</td>
+                <td class="editable" data-field="vin_code">${order.vin_code}</td>
+                <td class="editable" data-field="status">${order.status}</td>
+                <td class="editable" data-field="price">${order.price}</td>
+                <td><button onclick="deleteOrder(${order.id})">Delete</button></td>
+            `;
+        });
+
+        // Додаємо обробники подій для редагування
+        const editableCells = document.querySelectorAll('.editable');
+        editableCells.forEach(cell => {
+            cell.addEventListener('dblclick', function() {
+                editCell(cell); // Викликаємо функцію редагування
+            });
+        });
+
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+    }
+}
+
+// Функція для створення нового ордера
+async function createOrder() {
+    const service = prompt('Enter service name:');
+    const vinCode = prompt('Enter VIN code:');
+    const status = prompt('Enter status:');
+    const price = prompt('Enter price:');
+
+    try {
+        const response = await fetch(`${API_BASE_URL}orders`, {
+            method: 'POST',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ service, vin_code: vinCode, status, price })
+        });
+
+        if (response.ok) {
+            alert('Order created successfully');
+            getOrders(); // Оновлюємо список ордерів
+        } else {
+            alert('Failed to create order');
+        }
+    } catch (error) {
+        console.error('Error creating order:', error);
+        alert('Error occurred while creating order');
+    }
+}
+
+// Функція для редагування ордера
+async function saveOrder(cell, input, field, originalValue) {
+    const newValue = input.value;
+
+    if (newValue !== originalValue) {
+        const orderId = cell.closest('tr').getAttribute('data-id'); // Отримуємо ID ордера
+        const updatedData = {};
+        updatedData[field] = newValue;
+
+        const response = await fetch(`${API_BASE_URL}orders/${orderId}`, {
+            method: 'PUT',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(updatedData), // Відправляємо лише змінене поле
+        });
+
+        if (response.ok) {
+            console.log('Order updated successfully');
+            getOrders(); // Оновлюємо список ордерів
+        } else {
+            console.log('Failed to update order');
+        }
+    } else {
+        cell.textContent = originalValue; // Відновлюємо початкове значення, якщо нічого не змінилося
+    }
+}
+
+// Функція для видалення ордера
+async function deleteOrder(orderId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}orders/${orderId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        if (response.ok) {
+            alert('Order deleted successfully');
+            getOrders(); // Оновлюємо список ордерів
+        } else {
+            alert('Failed to delete order');
+        }
+    } catch (error) {
+        console.error('Error deleting order:', error);
+        alert('Error occurred while deleting order');
+    }
+}
+
+
 
 // Завантажуємо список користувачів при завантаженні сторінки
 window.onload = getUsers;

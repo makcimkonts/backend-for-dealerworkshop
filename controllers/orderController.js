@@ -363,6 +363,40 @@ const validateServiceByVin = async (req, res) => {
     }
 };
 
+
+// Функція для отримання історії замовлень користувача
+const getOrderHistory = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        // Отримуємо замовлення для конкретного користувача
+        const [orders] = await db.execute(
+            'SELECT id, total_price, status, created_at, updated_at FROM orders WHERE user_id = ? ORDER BY created_at DESC',
+            [id]
+        );
+
+        if (orders.length === 0) {
+            return res.status(404).json({ message: 'No orders found for this user.' });
+        }
+
+        // Для кожного замовлення отримуємо послуги
+        const ordersWithServices = await Promise.all(orders.map(async (order) => {
+            const [services] = await db.execute(
+                'SELECT os.service_id, s.service_name, s.description FROM order_services os JOIN services s ON os.service_id = s.id WHERE os.order_id = ?',
+                [order.id]
+            );
+            order.services = services; // Додаємо послуги до замовлення
+            return order;
+        }));
+
+        res.status(200).json(ordersWithServices);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ message: 'Error fetching order history.' });
+    }
+};
+
+
 module.exports = {
     createOrder,
     getOrdersForUser,
@@ -371,5 +405,6 @@ module.exports = {
     resetOrderStatus,
     cancelOrder,
     completeOrder,
-    validateServiceByVin // Ensure this is included
+    validateServiceByVin, // Ensure this is included
+    getOrderHistory
 };

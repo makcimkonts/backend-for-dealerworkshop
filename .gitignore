@@ -1,0 +1,31 @@
+# Node.js
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Директорії конфігурацій
+.vscode/
+
+# Приватні та конфіденційні файли
+.env
+
+# Логи
+logs/
+*.log
+
+# Вибіркові файли IDE/Editor
+.idea/
+*.sublime-workspace
+*.sublime-project
+
+# Для зберігання у Windows
+Thumbs.db
+Desktop.ini
+
+# Для macOS
+.DS_Store
+
+# Для Linux
+*.swp

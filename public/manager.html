@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users Management</title>
+    <link rel="stylesheet" href="css.css">
+</head>
+<body>
+    <h1>Users Management</h1>
+
+    <div>
+        <button onclick="createUser()">Create New User</button>
+    </div>
+
+    <table id="usersTable">
+        <thead>
+            <tr>
+                <th>Login</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+                <th>VIN Code</th>
+                <th>Role</th>
+                <th>Balance</th>
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            <!-- Users will be dynamically added here -->
+        </tbody>
+    </table>
+    
+    
+
+    <script src="app.js">
+        window.onload = getUsers;
+    </script>
+</body>
+</html>

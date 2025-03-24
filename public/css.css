@@ -3,9 +3,11 @@ body {
     margin: 0;
     padding: 20px;
     background-color: #f4f4f9;
+
 }
 h1, h2 {
     color: #333;
+    text-align: center;
 }
 form {
     background: #fff;
@@ -55,4 +57,103 @@ button:hover {
 }
 .hidden {
     display: none;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+th, td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+th {
+    background-color: #28a745;
+    color: white;
+}
+tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+.profile-container {
+display: flex; /* Розміщує блоки в рядок */
+gap: 20px; /* Відстань між блоками */
+align-items: flex-start; /* Вирівнює елементи по верхньому краю */
+}
+
+.profile-section {
+background: #fff;
+padding: 20px;
+border-radius: 8px;
+box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+width: 100%;
+max-width: 300px; /* Фіксована ширина */
+}
+.selected-services {
+margin-top: 20px;
+padding: 20px;
+background: #fff;
+border-radius: 8px;
+box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.selected-services ul {
+list-style: none;
+padding: 0;
+}
+
+.selected-services ul li {
+padding: 10px;
+border-bottom: 1px solid #ddd;
+display: flex;
+justify-content: space-between;
+align-items: center;
+}
+
+.selected-services ul li:last-child {
+border-bottom: none;
+}
+
+.remove-service-button {
+background-color: #dc3545;
+color: white;
+border: none;
+padding: 5px 10px;
+border-radius: 4px;
+cursor: pointer;
+}
+
+.remove-service-button:hover {
+background-color: #c82333;
+}
+
+.total-price {
+font-weight: bold;
+margin-top: 10px;
+}
+.order-item {
+border: 1px solid #ddd;
+padding: 10px;
+margin-bottom: 10px;
+}
+
+button {
+padding: 8px 15px;
+margin: 5px;
+cursor: pointer;
+font-size: 16px;
+}
+
+button:disabled {
+background-color: #ccc;
+cursor: not-allowed;
+}
+
+button:not(:disabled) {
+background-color: #4CAF50;
+color: white;
+}
+
+button:not(:disabled):hover {
+background-color: #45a049;
 }

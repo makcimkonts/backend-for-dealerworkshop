@@ -553,9 +553,167 @@ async function completeOrder(orderId) {
     }
 }
 
+
+////////
+// Function to create a new service or edit an existing one
+function createService() {
+    document.getElementById('serviceId').value = ''; // Reset the form
+    document.getElementById('serviceName').value = '';
+    document.getElementById('serviceDescription').value = '';
+    document.getElementById('servicePrice').value = '';
+    document.getElementById('modalTitle').textContent = 'Create Service';
+    document.getElementById('serviceModal').style.display = 'block';
+}
+
+// Function to close the modal
+function closeServiceModal() {
+    document.getElementById('serviceModal').style.display = 'none';
+}
+
+// Function to submit the service form
+document.getElementById('serviceForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    const serviceId = document.getElementById('serviceId').value;
+    const serviceName = document.getElementById('serviceName').value;
+    const serviceDescription = document.getElementById('serviceDescription').value;
+    const servicePrice = document.getElementById('servicePrice').value;
+
+    const serviceData = {
+        name: serviceName,
+        description: serviceDescription,
+        price: parseFloat(servicePrice),
+    };
+
+    try {
+        let response;
+        if (serviceId) {
+            response = await fetch(`${API_BASE_URL}services/${serviceId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(serviceData),
+            });
+        } else {
+            response = await fetch(`${API_BASE_URL}services`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(serviceData),
+            });
+        }
+
+        if (!response.ok) {
+            throw new Error('Failed to save service');
+        }
+
+        getServices(); // Refresh services list
+        closeServiceModal();
+    } catch (error) {
+        console.error('Error:', error);
+        showErrorToUser('Помилка при збереженні сервісу');
+    }
+});
+
+// Function to get and display services
+async function getServices() {
+    try {
+        const response = await fetch(`${API_BASE_URL}services/`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch services');
+        }
+
+        const data = await response.json();
+        const servicesTable = document.getElementById('servicesTable').getElementsByTagName('tbody')[0];
+        servicesTable.innerHTML = '';
+
+        data.forEach(service => {
+            const row = servicesTable.insertRow();
+            const price = parseFloat(service.price); // Перетворення на число
+            row.setAttribute('data-id', service.id);
+            row.innerHTML = `
+                <td>${service.service_name}</td>
+                <td>${service.description}</td>
+                <td>${isNaN(price) ? 'N/A' : price.toFixed(2)} грн</td>
+                <td>
+                    <button onclick="editService(${service.id})">Edit</button>
+                    <button onclick="deleteService(${service.id})">Delete</button>
+                </td>
+            `;
+        });
+    } catch (error) {
+        console.error('Error fetching services:', error);
+        showErrorToUser('Не вдалося завантажити сервіси');
+    }
+}
+
+// Function to edit a service
+async function editService(serviceId) {
+    try {
+        const response = await fetch(`${API_BASE_URL}services/${serviceId}`, {
+            method: 'GET',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to fetch service');
+        }
+
+        const service = await response.json();
+
+        document.getElementById('serviceId').value = service.id;
+        document.getElementById('serviceName').value = service.service_name;
+        document.getElementById('serviceDescription').value = service.description;
+        document.getElementById('servicePrice').value = service.price;
+
+        document.getElementById('modalTitle').textContent = 'Edit Service';
+        document.getElementById('serviceModal').style.display = 'block';
+    } catch (error) {
+        console.error('Error:', error);
+        showErrorToUser('Не вдалося редагувати сервіс');
+    }
+}
+
+// Function to delete a service
+async function deleteService(serviceId) {
+    if (!confirm('Are you sure you want to delete this service?')) return;
+
+    try {
+        const response = await fetch(`${API_BASE_URL}services/${serviceId}`, {
+            method: 'DELETE',
+            headers: {
+                'Authorization': `Bearer ${token}`,
+            },
+        });
+
+        if (!response.ok) {
+            throw new Error('Failed to delete service');
+        }
+
+        getServices(); // Refresh the services list
+    } catch (error) {
+        console.error('Error deleting service:', error);
+        showErrorToUser('Не вдалося видалити сервіс');
+    }
+}
+
+// Initialize services data when page loads
 // Initialize the modal close button
 document.addEventListener('DOMContentLoaded', () => {
     const closeButton = document.querySelector('.close-modal');
+    getServices();
     if (closeButton) {
         closeButton.addEventListener('click', closeUserOrdersModal);
     }

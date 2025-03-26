@@ -83,22 +83,18 @@ const getServiceById = async (req, res) => {
             return res.status(404).json({ message: 'Сервіс не знайдено' });
         }
 
-        // Отримуємо запчастини, які використовуються в сервісі
-        const [parts] = await db.execute(
-            'SELECT p.id, p.name, p.price FROM parts p JOIN service_parts sp ON p.id = sp.part_id WHERE sp.service_id = ?', 
-            [id]
-        );
+        // Підраховуємо загальну вартість без запчастин
+        const totalCost = service[0].price;
 
-        // Підраховуємо загальну вартість
-        const partsTotal = parts.reduce((sum, part) => sum + part.price, 0);
-        const totalCost = service[0].price + partsTotal;
-
-        res.json({ ...service[0], parts, totalCost });
+        res.json({ ...service[0], totalCost });
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Помилка при отриманні сервісу' });
     }
 };
+
+
+
 
 
 const getAvailableServices = async (req, res) => {

@@ -296,7 +296,7 @@ async function changePassword(oldPassword, newPassword) {
 async function updateProfileInfo(firstName, lastName, vinCode) {
     try {
         if (!token) throw new Error('Відсутній токен. Авторизуйтесь знову.');
-        
+
         const response = await fetch(`${API_BASE_URL}/user/profile`, {
             method: 'PUT',
             headers: {
@@ -315,6 +315,68 @@ async function updateProfileInfo(firstName, lastName, vinCode) {
         showMessage('profileMessage', error.message, false);
     }
 }
+
+document.getElementById('updateProfileForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+    
+    // Use the correct IDs
+    const firstName = document.getElementById('updateFirstName').value;
+    const lastName = document.getElementById('updateLastName').value;
+    const vinCode = document.getElementById('updateVinCode').value;
+    
+    updateProfileInfo(firstName, lastName, vinCode);
+});
+
+async function updatePasswordInfo(oldPassword, newPassword) {
+    try {
+        if (!token) throw new Error('Відсутній токен. Авторизуйтесь знову.');
+
+        const response = await fetch(`${API_BASE_URL}/user/password`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`,
+            },
+            body: JSON.stringify({ old_password: oldPassword, new_password: newPassword }),
+        });
+
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.message);
+
+        // Показуємо повідомлення про успішну зміну пароля
+        showMessage('profileMessage', 'Пароль успішно змінено!', true);
+
+        // Сховуємо профіль і показуємо форму входу
+        document.getElementById('profileSection').classList.add('hidden');
+        document.getElementById('authSection').classList.remove('hidden');
+
+        // Додатково можемо очистити поля форми входу
+        document.getElementById('loginLogin').value = '';
+        document.getElementById('loginPassword').value = '';
+
+    } catch (error) {
+        showMessage('profileMessage', error.message, false);
+    }
+}
+
+document.getElementById('updatePasswordForm').addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    // Отримуємо значення з полів форми для зміни паролю
+    const oldPassword = document.getElementById('oldPassword').value;
+    const newPassword = document.getElementById('newPassword').value;
+
+    // Перевірка на наявність значень
+    if (!oldPassword || !newPassword) {
+        showMessage('profileMessage', 'Будь ласка, заповніть всі поля.', false);
+        return;
+    }
+
+    updatePasswordInfo(oldPassword, newPassword);
+});
+
+
+
 
 // Отримати всі сервіси
 // Отримати всі сервіси
@@ -383,7 +445,7 @@ async function fetchOrders(userId) {
             },
         });
         const data = await response.json();
-        if (!response.ok) throw new Error(data.message || 'Помилка отримання замовлень');
+        if (!response.ok) throw new Error(data.message || 'Не вдалося отримати замовлення');
 
         const ordersTableBody = document.querySelector('#ordersTable tbody');
         ordersTableBody.innerHTML = data.map(order => `
@@ -396,7 +458,7 @@ async function fetchOrders(userId) {
                     ${order.status === 'Pending' ? `
                         <button onclick="cancelOrder(${order.id})">Скасувати</button>
                     ` : ''}
-                    ${order.status !== 'Pending' && order.status !== 'Paid' ? `
+                    ${order.status === 'Completed' ? `
                         <button onclick="payForOrder(${order.id})">Оплатити</button>
                     ` : ''}
                 </td>
@@ -406,6 +468,7 @@ async function fetchOrders(userId) {
         showMessage('orderMessage', error.message, false);
     }
 }
+
 
 // Функція для скасування замовлення
 async function cancelOrder(orderId) {

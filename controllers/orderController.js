@@ -104,18 +104,18 @@ const createOrder = async (req, res) => {
 
 // Отримання історії замовлень для користувача
 const getOrdersForUser = async (req, res) => {
-    const userId = req.user.id;
-  
+    const userId = req.user.id;  // Отримуємо userId з токена
+
     try {
         const [orders] = await db.execute(
             'SELECT * FROM orders WHERE user_id = ?',
-            [userId]
+            [userId]  // Фільтруємо замовлення за user_id
         );
-  
+
         if (orders.length === 0) {
             return res.status(404).json({ message: 'Замовлення не знайдено' });
         }
-  
+
         const ordersWithDetails = await Promise.all(orders.map(async (order) => {
             // Отримуємо сервіси для замовлення
             const [services] = await db.execute(
@@ -125,9 +125,9 @@ const getOrdersForUser = async (req, res) => {
                  WHERE os.order_id = ?`,
                 [order.id]  // Використовуємо лише order_id для пошуку сервісів
             );
-  
+
             const totalPrice = services.reduce((sum, service) => sum + parseFloat(service.price), 0);
-  
+
             return {
                 id: order.id,
                 user_id: order.user_id,
@@ -143,14 +143,14 @@ const getOrdersForUser = async (req, res) => {
                 })),
             };
         }));
-  
-        res.json(ordersWithDetails);
+
+        res.json(ordersWithDetails);  // Відправляємо лише замовлення користувача
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Помилка при отриманні замовлень' });
     }
-  };
-  
+};
+
 // Оновлення статусу замовлення
 const updateOrderStatus = async (req, res) => {
     const { orderId } = req.params;
@@ -180,13 +180,14 @@ const updateOrderStatus = async (req, res) => {
 
 // Оплата замовлення
 const payForOrder = async (req, res) => {
-    const userId = req.user.id;
-    const { orderId } = req.params;
+    const userId = req.user.id;  // Беремо ID користувача з токену
+    const { orderId } = req.params;  // ID замовлення
 
     const connection = await db.getConnection();
     try {
         await connection.beginTransaction();
 
+        // Отримуємо замовлення
         const [order] = await connection.execute(
             'SELECT id, user_id, total_price, status FROM orders WHERE id = ? AND user_id = ?',
             [orderId, userId]
@@ -204,6 +205,7 @@ const payForOrder = async (req, res) => {
 
         const orderTotalPrice = parseFloat(order[0].total_price);
 
+        // Отримуємо баланс користувача
         const [user] = await connection.execute('SELECT balance FROM users WHERE id = ?', [userId]);
         if (user.length === 0) {
             await connection.rollback();
@@ -212,25 +214,33 @@ const payForOrder = async (req, res) => {
 
         let userBalance = parseFloat(user[0].balance || 0);
 
+        // Перевірка, чи є достатньо коштів для оплати
         if (userBalance < orderTotalPrice) {
             await connection.rollback();
             return res.status(400).json({ message: 'Недостатньо коштів для оплати' });
         }
 
+        // Оновлюємо статус замовлення на "Paid"
         await connection.execute('UPDATE orders SET status = "Paid" WHERE id = ?', [orderId]);
+        // Зменшуємо баланс користувача на суму замовлення
         await connection.execute('UPDATE users SET balance = balance - ? WHERE id = ?', [orderTotalPrice, userId]);
 
-        await connection.commit();
+        await connection.commit();  // Підтверджуємо транзакцію
 
-        return res.json({ message: 'Оплата замовлення успішна', newBalance: userBalance - orderTotalPrice });
+        // Повертаємо успішну відповідь
+        return res.json({ 
+            message: 'Оплата замовлення успішна', 
+            newBalance: userBalance - orderTotalPrice  // Показуємо новий баланс користувача
+        });
     } catch (error) {
-        await connection.rollback();
+        await connection.rollback();  // Якщо сталася помилка, відкатуємо транзакцію
         console.error('❌ Помилка при оплаті замовлення:', error);
         return res.status(500).json({ message: 'Помилка сервера при оплаті', error: error.message });
     } finally {
-        connection.release();
+        connection.release();  // Завжди звільняємо підключення до БД
     }
 };
+
 
 // Скидання статусу замовлення
 const resetOrderStatus = async (req, res) => {
@@ -397,6 +407,47 @@ const getOrderHistory = async (req, res) => {
 };
 
 
+const OrderList = async (req, res) => {
+    try {
+        const [orders] = await db.query(`
+          SELECT o.id, o.user_id, o.total_price, o.status, o.created_at, 
+       GROUP_CONCAT(s.service_name SEPARATOR ', ') AS services
+FROM orders o
+LEFT JOIN order_services os ON o.id = os.order_id
+LEFT JOIN services s ON os.service_id = s.id
+GROUP BY o.id
+ORDER BY o.created_at DESC;
+
+        `);
+
+        res.json(orders);
+    } catch (error) {
+        console.error('Error fetching orders:', error);
+        res.status(500).json({ message: 'Internal server error' });
+    }
+}
+
+
+const confirmOrder = async (req, res) => {
+    const { id } = req.params;
+
+    try {
+        const result = await db.query(
+            'UPDATE orders SET status = "confirmed" WHERE id = ?',
+            [id]
+        );
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({ error: 'Замовлення не знайдено' });
+        }
+
+        res.json({ message: 'Замовлення підтверджено' });
+    } catch (error) {
+        console.error('Помилка підтвердження замовлення:', error);
+        res.status(500).json({ error: 'Помилка сервера' });
+    }
+};
+
 module.exports = {
     createOrder,
     getOrdersForUser,
@@ -406,5 +457,7 @@ module.exports = {
     cancelOrder,
     completeOrder,
     validateServiceByVin, // Ensure this is included
-    getOrderHistory
+    getOrderHistory,
+    OrderList,
+    confirmOrder
 };

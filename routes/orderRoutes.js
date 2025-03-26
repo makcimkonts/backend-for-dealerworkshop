@@ -6,9 +6,12 @@ const orderController = require('../controllers/orderController');
 // Створення нового замовлення
 router.post('/', authenticateToken, orderController.createOrder);
 
+router.get('/', authenticateToken, authenticateManager, orderController.OrderList);
 // Отримання історії замовлень для користувача
 router.get('/:userId', authenticateToken, orderController.getOrdersForUser);
 
+
+router.put('/:id/confirm', authenticateToken, authenticateManager, orderController.confirmOrder);
 // Оновлення статусу замовлення
 router.put('/status/:orderId', authenticateToken, authenticateManager, orderController.updateOrderStatus);
 
@@ -28,7 +31,7 @@ router.post('/:id/cancel', (req, res, next) => {
 router.post('/validate', orderController.validateServiceByVin);
 
 // Завершення замовлення
-router.post('/:orderId/complete', authenticateToken, authenticateManager, orderController.completeOrder);
+router.put('/:orderId/complete', authenticateToken, authenticateManager, orderController.completeOrder);
 
 
 router.get('/order-history/:id', authenticateToken,authenticateManager, orderController.getOrderHistory);

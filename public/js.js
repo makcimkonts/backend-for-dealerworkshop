@@ -506,6 +506,7 @@ async function payForOrder(orderId) {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${token}`,
+                'Content-Type': 'application/json', // Важливо додати Content-Type
             },
         });
 

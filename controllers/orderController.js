@@ -105,10 +105,16 @@ const createOrder = async (req, res) => {
 // Отримання історії замовлень для користувача
 const getOrdersForUser = async (req, res) => {
     const userId = req.user.id;  // Отримуємо userId з токена
+    console.log(`User ID from token: ${userId}`);
 
     try {
         const [orders] = await db.execute(
-            'SELECT * FROM orders WHERE user_id = ?',
+            `SELECT o.id AS order_id, o.user_id, o.status, o.created_at, o.updated_at,
+                    s.id AS service_id, s.service_name, s.price, s.vin_code
+             FROM orders o
+             LEFT JOIN order_services os ON o.id = os.order_id
+             LEFT JOIN services s ON os.service_id = s.id
+             WHERE o.user_id = ?`,
             [userId]  // Фільтруємо замовлення за user_id
         );
 
@@ -116,40 +122,50 @@ const getOrdersForUser = async (req, res) => {
             return res.status(404).json({ message: 'Замовлення не знайдено' });
         }
 
-        const ordersWithDetails = await Promise.all(orders.map(async (order) => {
-            // Отримуємо сервіси для замовлення
-            const [services] = await db.execute(
-                `SELECT s.id, s.service_name, s.price, s.vin_code
-                 FROM services s
-                 JOIN order_services os ON s.id = os.service_id
-                 WHERE os.order_id = ?`,
-                [order.id]  // Використовуємо лише order_id для пошуку сервісів
-            );
+        const ordersWithDetails = [];
+        let currentOrder = null;
 
-            const totalPrice = services.reduce((sum, service) => sum + parseFloat(service.price), 0);
+        orders.forEach(order => {
+            // Якщо це нове замовлення (починається новий order)
+            if (!currentOrder || currentOrder.id !== order.order_id) {
+                if (currentOrder) {
+                    ordersWithDetails.push(currentOrder);
+                }
+                currentOrder = {
+                    id: order.order_id,
+                    user_id: order.user_id,
+                    total_price: 0,
+                    status: order.status,
+                    created_at: order.created_at,
+                    updated_at: order.updated_at,
+                    services: [],
+                };
+            }
 
-            return {
-                id: order.id,
-                user_id: order.user_id,
-                total_price: totalPrice,
-                status: order.status,
-                created_at: order.created_at,
-                updated_at: order.updated_at,
-                services: services.map(service => ({
-                    id: service.id,
-                    name: service.service_name,
-                    price: service.price,
-                    vin_code: service.vin_code,  // Додаємо vin_code для кожного сервісу
-                })),
-            };
-        }));
+            // Додаємо послугу до поточного замовлення
+            currentOrder.services.push({
+                id: order.service_id,
+                name: order.service_name,
+                price: order.price,
+                vin_code: order.vin_code,
+            });
 
-        res.json(ordersWithDetails);  // Відправляємо лише замовлення користувача
+            // Додаємо вартість послуги до загальної вартості
+            currentOrder.total_price += parseFloat(order.price);
+        });
+
+        // Додаємо останнє замовлення в масив
+        if (currentOrder) {
+            ordersWithDetails.push(currentOrder);
+        }
+
+        res.json(ordersWithDetails);
     } catch (error) {
         console.error(error);
         res.status(500).json({ message: 'Помилка при отриманні замовлень' });
     }
 };
+
 
 // Оновлення статусу замовлення
 const updateOrderStatus = async (req, res) => {
@@ -198,7 +214,8 @@ const payForOrder = async (req, res) => {
             return res.status(404).json({ message: 'Замовлення не знайдено' });
         }
 
-        if (order[0].status !== 'Pending') {
+        // Дозволяємо оплату для статусів 'Pending' та 'Completed'
+        if (order[0].status !== 'Pending' && order[0].status !== 'Completed') {
             await connection.rollback();
             return res.status(400).json({ message: 'Замовлення не може бути оплачено' });
         }
@@ -240,6 +257,7 @@ const payForOrder = async (req, res) => {
         connection.release();  // Завжди звільняємо підключення до БД
     }
 };
+
 
 
 // Скидання статусу замовлення
@@ -376,35 +394,45 @@ const validateServiceByVin = async (req, res) => {
 
 // Функція для отримання історії замовлень користувача
 const getOrderHistory = async (req, res) => {
-    const { id } = req.params;
+    const userId = Number(req.params.userId); // Переконуємося, що це число
+    if (!userId) {
+        return res.status(400).json({ message: 'Invalid user ID' });
+    }
 
     try {
-        // Отримуємо замовлення для конкретного користувача
+        console.log("Fetching orders for user ID:", userId);
+
         const [orders] = await db.execute(
             'SELECT id, total_price, status, created_at, updated_at FROM orders WHERE user_id = ? ORDER BY created_at DESC',
-            [id]
+            [userId]
         );
 
-        if (orders.length === 0) {
+        console.log("Orders found:", orders); // Додаємо логування
+
+        if (!orders.length) {
             return res.status(404).json({ message: 'No orders found for this user.' });
         }
 
-        // Для кожного замовлення отримуємо послуги
         const ordersWithServices = await Promise.all(orders.map(async (order) => {
             const [services] = await db.execute(
-                'SELECT os.service_id, s.service_name, s.description FROM order_services os JOIN services s ON os.service_id = s.id WHERE os.order_id = ?',
+                'SELECT os.service_id, s.service_name FROM order_services os JOIN services s ON os.service_id = s.id WHERE os.order_id = ?',
                 [order.id]
             );
-            order.services = services; // Додаємо послуги до замовлення
+            order.services = services || [];
             return order;
         }));
 
+        console.log("Final orders:", ordersWithServices); // Логування для перевірки
+
+
         res.status(200).json(ordersWithServices);
     } catch (error) {
-        console.error(error);
+        console.error('Database error:', error);
         res.status(500).json({ message: 'Error fetching order history.' });
     }
 };
+
+
 
 
 const OrderList = async (req, res) => {

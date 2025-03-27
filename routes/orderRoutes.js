@@ -9,6 +9,7 @@ router.post('/', authenticateToken, orderController.createOrder);
 router.get('/', authenticateToken, authenticateManager, orderController.OrderList);
 // Отримання історії замовлень для користувача
 router.get('/:userId', authenticateToken, orderController.getOrdersForUser);
+// router.get('/', authenticateToken, orderController.getOrdersForUser);
 
 
 router.put('/:id/confirm', authenticateToken, authenticateManager, orderController.confirmOrder);

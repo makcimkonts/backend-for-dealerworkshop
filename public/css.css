@@ -1,14 +1,56 @@
+/* Стиль для помилок, які з'являються зверху */
+#errorMessage,
+#successMessage {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    padding: 15px;
+    text-align: center;
+    font-weight: bold;
+    z-index: 9999;
+    font-size: 16px;
+    border-radius: 0 0 8px 8px;
+    display: none; /* Сховано за замовчуванням */
+    animation: slideDown 0.3s ease-in-out;
+}
+
+/* Помилка */
+#errorMessage {
+    background-color: #f8d7da;
+    color: #721c24;
+    border-bottom: 1px solid #721c24;
+}
+
+/* Успішне повідомлення */
+#successMessage {
+    background-color: #d4edda;
+    color: #155724;
+    border-bottom: 1px solid #155724;
+}
+
+/* Анімація для появи повідомлення */
+@keyframes slideDown {
+    from {
+        top: -50px;
+    }
+    to {
+        top: 0;
+    }
+}
+
 body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 20px;
     background-color: #f4f4f9;
-
 }
+
 h1, h2 {
     color: #333;
     text-align: center;
 }
+
 form {
     background: #fff;
     padding: 20px;
@@ -17,11 +59,13 @@ form {
     max-width: 400px;
     margin: 20px auto;
 }
+
 label {
     display: block;
     margin-bottom: 8px;
     font-weight: bold;
 }
+
 input, select, textarea {
     width: 100%;
     padding: 10px;
@@ -29,6 +73,7 @@ input, select, textarea {
     border: 1px solid #ccc;
     border-radius: 4px;
 }
+
 button {
     width: 100%;
     padding: 10px;
@@ -38,122 +83,136 @@ button {
     border-radius: 4px;
     cursor: pointer;
 }
+
 button:hover {
     background-color: #218838;
 }
+
 .message {
     margin-top: 15px;
     padding: 10px;
     border-radius: 4px;
     text-align: center;
 }
+
 .success {
     background-color: #d4edda;
     color: #155724;
 }
+
 .error {
     background-color: #f8d7da;
     color: #721c24;
 }
+
 .hidden {
     display: none;
 }
+
 table {
     width: 100%;
     border-collapse: collapse;
     margin-top: 20px;
 }
+
 th, td {
     padding: 12px;
     border: 1px solid #ddd;
     text-align: left;
 }
+
 th {
     background-color: #28a745;
     color: white;
 }
+
 tr:nth-child(even) {
     background-color: #f2f2f2;
 }
+
+.checkbox-container {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+#filterCheckbox {
+    width: 16px;
+    height: 16px;
+    cursor: pointer;
+}
+
 .profile-container {
-display: flex; /* Розміщує блоки в рядок */
-gap: 20px; /* Відстань між блоками */
-align-items: flex-start; /* Вирівнює елементи по верхньому краю */
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
 }
 
 .profile-section {
-background: #fff;
-padding: 20px;
-border-radius: 8px;
-box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-width: 100%;
-max-width: 300px; /* Фіксована ширина */
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    width: 100%;
+    max-width: 300px;
 }
+
 .selected-services {
-margin-top: 20px;
-padding: 20px;
-background: #fff;
-border-radius: 8px;
-box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin-top: 20px;
+    padding: 20px;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .selected-services ul {
-list-style: none;
-padding: 0;
+    list-style: none;
+    padding: 0;
 }
 
 .selected-services ul li {
-padding: 10px;
-border-bottom: 1px solid #ddd;
-display: flex;
-justify-content: space-between;
-align-items: center;
+    padding: 10px;
+    border-bottom: 1px solid #ddd;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .selected-services ul li:last-child {
-border-bottom: none;
+    border-bottom: none;
 }
 
 .remove-service-button {
-background-color: #dc3545;
-color: white;
-border: none;
-padding: 5px 10px;
-border-radius: 4px;
-cursor: pointer;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
 }
 
 .remove-service-button:hover {
-background-color: #c82333;
+    background-color: #c82333;
 }
 
 .total-price {
-font-weight: bold;
-margin-top: 10px;
-}
-.order-item {
-border: 1px solid #ddd;
-padding: 10px;
-margin-bottom: 10px;
-}
-
-button {
-padding: 8px 15px;
-margin: 5px;
-cursor: pointer;
-font-size: 16px;
+    font-weight: bold;
+    margin-top: 10px;
 }
 
 button:disabled {
-background-color: #ccc;
-cursor: not-allowed;
+    background-color: #ccc;
+    cursor: not-allowed;
 }
 
 button:not(:disabled) {
-background-color: #4CAF50;
-color: white;
+    background-color: #4CAF50;
+    color: white;
 }
 
 button:not(:disabled):hover {
-background-color: #45a049;
+    background-color: #45a049;
 }

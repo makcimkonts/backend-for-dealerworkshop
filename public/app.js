@@ -138,7 +138,7 @@ async function saveCell(cell, input, field, originalValue) {
             });
 
             if (response.ok) {
-                alert('User updated successfully');
+                
                 getUsers(); // Оновлюємо список користувачів
             } else {
                 alert('Failed to update user');

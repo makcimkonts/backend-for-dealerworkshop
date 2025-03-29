@@ -1,6 +1,7 @@
 const API_BASE_URL = 'http://localhost:3000/api'; // Замініть на вашу адресу сервера
 let token = localStorage.getItem('token');
 let selectedServices = []; // Ініціалізація для вибраних послуг
+let allServices = []; // Змінна для зберігання всіх послуг
 if (token) {
     fetch('http://localhost:3000/api/user/profile', {
         method: 'GET',
@@ -18,9 +19,17 @@ if (token) {
 function showMessage(elementId, message, isSuccess) {
     const element = document.getElementById(elementId);
     if (!element) return;
+
     element.textContent = message;
+    element.style.display = 'block';
     element.style.color = isSuccess ? 'green' : 'red';
+    
+    // Автоматичне приховування повідомлення через 5 секунд
+    setTimeout(() => {
+        element.style.display = 'none';
+    }, 5000);
 }
+
 
 // Перевірка авторизації при завантаженні сторінки
 function checkAuth() {
@@ -388,24 +397,48 @@ async function fetchServices() {
         });
         const data = await response.json();
         if (!response.ok) throw new Error(data.message || 'Помилка отримання сервісів');
+        
+        allServices = data; // Зберігаємо всі послуги
 
-        const servicesTableBody = document.querySelector('#servicesTable tbody');
-        servicesTableBody.innerHTML = data.map(service => `
-            <tr>
-                <td>${service.id}</td>
-                <td>${service.service_name}</td>
-                <td>${service.description}</td>
-                <td>${service.price || 'Невідомо'} грн</td>
-                <td>${service.vin_code}</td>
-                <td>
-                    <button onclick="handleAddToQuote(${service.id}, '${service.service_name}', ${service.price}, '${service.vin_code}')">Додати до кошторису</button>
-                </td>
-            </tr>
-        `).join('');
+        // Показуємо їх в таблиці
+        renderServices(allServices);
     } catch (error) {
         showMessage('serviceSection', error.message, false);
     }
 }
+
+// Функція для відображення послуг в таблиці
+function renderServices(services) {
+    const servicesTableBody = document.querySelector('#servicesTable tbody');
+    servicesTableBody.innerHTML = services.map(service => `
+        <tr>
+            <td>${service.id}</td>
+            <td>${service.service_name}</td>
+            <td>${service.description}</td>
+            <td>${service.price || 'Невідомо'} грн</td>
+            <td>${service.vin_code}</td>
+            <td>
+                <button onclick="handleAddToQuote(${service.id}, '${service.service_name}', ${service.price}, '${service.vin_code}')">Додати до кошторису</button>
+            </td>
+        </tr>
+    `).join('');
+}
+
+// Функція для фільтрації послуг на основі VIN-коду
+function filterServices() {
+    const isChecked = document.getElementById('filterCheckbox').checked;
+    const vinCode = "WBAVB13596KX25487"; // Твій VIN-код (або можливо, динамічний, якщо він змінюється)
+    
+    let filteredServices = allServices; // Початково всі послуги
+
+    if (isChecked) {
+        // Фільтруємо по VIN-коду, якщо чекбокс активовано
+        filteredServices = allServices.filter(service => service.vin_code === vinCode || !service.vin_code);
+    }
+
+    renderServices(filteredServices); // Оновлюємо таблицю
+}
+
 
 
 async function handleAddToQuote(serviceId, serviceName, servicePrice, serviceVinCode) {

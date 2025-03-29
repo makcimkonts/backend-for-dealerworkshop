@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="css.css"> <!-- Ваш файл стилів -->
 </head>
 <body>
-   <!-- Форма входу -->
+
 <div id="authSection">
     <h1>Вхід</h1>
     <form id="loginForm">
@@ -126,6 +126,9 @@
 <div id="orderMessage" class="message"></div>
     <!-- Доступні сервіси -->
 <h2>Доступні сервіси</h2>
+<label>
+    <input type="checkbox" id="filterCheckbox" onchange="filterServices()"> Показати тільки універсальні послуги
+</label>
 
 <table id="servicesTable">
     <thead>

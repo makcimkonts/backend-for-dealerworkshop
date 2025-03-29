@@ -12,10 +12,6 @@ const createOrder = async (req, res) => {
             console.warn('⚠️ Невірний формат сервісів:', services);
             return res.status(400).json({ message: 'Невірний формат сервісів' });
         }
-        if (!total_price || isNaN(total_price)) {
-            console.warn('⚠️ Некоректна ціна:', total_price);
-            return res.status(400).json({ message: 'Некоректна ціна' });
-        }
         if (!vin || typeof vin !== 'string') {
             console.warn('⚠️ Некоректний VIN-код:', vin);
             return res.status(400).json({ message: 'Некоректний VIN-код' });
@@ -31,7 +27,7 @@ const createOrder = async (req, res) => {
         const [servicesForVin] = await db.execute('SELECT id, price FROM services WHERE vin_code = ?', [vin]);
         console.log('✅ Послуги, доступні для VIN:', servicesForVin);
 
-        const availableServicesMap = new Map(servicesForVin.map(service => [service.id, service.price]));
+        const availableServicesMap = new Map(servicesForVin.map(service => [service.id, parseFloat(service.price)])); // конвертуємо ціну в число
 
         // Розділення вибраних сервісів на ті, що підходять, і ті, що ні
         console.log('⚡ Отримані ID від клієнта:', services);
@@ -58,7 +54,7 @@ const createOrder = async (req, res) => {
         console.log('🛒 Створення замовлення для користувача:', user_id);
         const [orderResult] = await db.execute(
             'INSERT INTO orders (user_id, total_price, status) VALUES (?, ?, ?)',
-            [user_id, recalculatedTotalPrice, 'Pending']
+            [user_id, recalculatedTotalPrice.toFixed(2), 'Pending']
         );
         const orderId = orderResult.insertId;
         console.log('✅ Замовлення створено, ID:', orderId);
@@ -74,7 +70,7 @@ const createOrder = async (req, res) => {
 
         // Формування повідомлення про частково доступні послуги
         const responseMessage = invalidServices.length > 0
-            ? `Замовлення створено, але наступні послуги недоступні для вашого VIN: ${invalidServices.join(', ')}`
+            ? `Замовлення створено, але наступні послуги недоступні для вашого VIN: ${invalidServices.join(', ')}` 
             : 'Замовлення створено успішно';
 
         console.log('📩 Відповідь клієнту:', {
@@ -85,12 +81,12 @@ const createOrder = async (req, res) => {
             recalculatedTotalPrice
         });
 
-        res.status(201).json({ 
-            message: responseMessage, 
-            orderId, 
-            validServices, 
-            invalidServices, 
-            recalculatedTotalPrice 
+        res.status(201).json({
+            message: responseMessage,
+            orderId,
+            validServices,
+            invalidServices,
+            recalculatedTotalPrice
         });
 
     } catch (error) {

@@ -26,10 +26,22 @@ const updateService = async (req, res) => {
     const { id } = req.params;
     const { service_name, description, price, vin_code } = req.body;
 
+    console.log("Request body:", req.body);
+    console.log("Request params:", req.params);
+
+    if (!id || !service_name || !description || price === undefined || !vin_code) {
+        return res.status(400).json({ error: "Усі поля обов'язкові" });
+    }
+
     try {
+        const validServiceName = service_name ?? null;
+        const validDescription = description ?? null;
+        const validPrice = price ?? null;
+        const validVinCode = vin_code ?? null;
+
         const [result] = await db.execute(
             'UPDATE services SET service_name = ?, description = ?, price = ?, vin_code = ? WHERE id = ?',
-            [service_name, description, price, vin_code, id]
+            [validServiceName, validDescription, validPrice, validVinCode, id]
         );
 
         if (result.affectedRows === 0) {
@@ -42,6 +54,7 @@ const updateService = async (req, res) => {
         res.status(500).json({ message: 'Помилка при оновленні сервісу' });
     }
 };
+
 
 // Видалення сервісу
 const deleteService = async (req, res) => {

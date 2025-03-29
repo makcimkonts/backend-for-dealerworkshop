@@ -561,6 +561,7 @@ function createService() {
     document.getElementById('serviceName').value = '';
     document.getElementById('serviceDescription').value = '';
     document.getElementById('servicePrice').value = '';
+    document.getElementById('serviceVinCode').value = ''; // Очищення VIN-коду
     document.getElementById('modalTitle').textContent = 'Create Service';
     document.getElementById('serviceModal').style.display = 'block';
 }
@@ -578,11 +579,13 @@ document.getElementById('serviceForm').addEventListener('submit', async (e) => {
     const serviceName = document.getElementById('serviceName').value;
     const serviceDescription = document.getElementById('serviceDescription').value;
     const servicePrice = document.getElementById('servicePrice').value;
+    const serviceVinCode = document.getElementById('serviceVinCode').value; // Отримання VIN-коду
 
     const serviceData = {
-        name: serviceName,
+        service_name: serviceName,
         description: serviceDescription,
         price: parseFloat(servicePrice),
+        vin_code: serviceVinCode, // Додаємо поле VIN-коду
     };
 
     try {
@@ -638,13 +641,14 @@ async function getServices() {
         servicesTable.innerHTML = '';
 
         data.forEach(service => {
-            const row = servicesTable.insertRow();
-            const price = parseFloat(service.price); // Перетворення на число
+            const price = parseFloat(service.price);
+            row = servicesTable.insertRow();
             row.setAttribute('data-id', service.id);
             row.innerHTML = `
                 <td>${service.service_name}</td>
                 <td>${service.description}</td>
                 <td>${isNaN(price) ? 'N/A' : price.toFixed(2)} грн</td>
+                <td>${service.vin_code || 'N/A'}</td> <!-- Відображення VIN-коду -->
                 <td>
                     <button onclick="editService(${service.id})">Edit</button>
                     <button onclick="deleteService(${service.id})">Delete</button>
@@ -677,6 +681,7 @@ async function editService(serviceId) {
         document.getElementById('serviceName').value = service.service_name;
         document.getElementById('serviceDescription').value = service.description;
         document.getElementById('servicePrice').value = service.price;
+        document.getElementById('serviceVinCode').value = service.vin_code || ''; // Додавання VIN-коду
 
         document.getElementById('modalTitle').textContent = 'Edit Service';
         document.getElementById('serviceModal').style.display = 'block';
@@ -685,6 +690,7 @@ async function editService(serviceId) {
         showErrorToUser('Не вдалося редагувати сервіс');
     }
 }
+
 
 // Function to delete a service
 async function deleteService(serviceId) {

@@ -136,6 +136,7 @@
             <th>Сервіс</th>
             <th>Опис</th>
             <th>Ціна</th>
+            <th>VIN-код</th> <!-- Додано новий стовпець -->
             <th>Дії</th>
         </tr>
     </thead>
@@ -157,6 +158,8 @@
             <textarea id="serviceDescription" required></textarea><br><br>
             <label for="servicePrice">Ціна:</label><br>
             <input type="number" id="servicePrice" step="0.01" required><br><br>
+            <label for="serviceVinCode">VIN-код:</label><br> <!-- Додано поле VIN-коду -->
+            <input type="text" id="serviceVinCode"><br><br>
             <button type="submit">Зберегти</button>
         </form>
     </div>

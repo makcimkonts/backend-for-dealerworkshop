@@ -2,6 +2,7 @@ const API_BASE_URL = 'http://localhost:3000/api'; // Замініть на ва�
 let token = localStorage.getItem('token');
 let selectedServices = []; // Ініціалізація для вибраних послуг
 let allServices = []; // Змінна для зберігання всіх послуг
+let availableServices = []; // Масив всіх доступних сервісів (отриманих з API)
 if (token) {
     fetch('http://localhost:3000/api/user/profile', {
         method: 'GET',
@@ -106,19 +107,6 @@ document.getElementById('registerForm')?.addEventListener('submit', async (e) =>
 });
 
 
-// Функція для відображення повідомлення
-// function showMessage(message) {
-//     const messageElement = document.getElementById('message'); // чи інший спосіб знаходження елемента
-//     if (messageElement) {
-//       messageElement.textContent = message;
-//     } else {
-//       console.error('Елемент не знайдено');
-//     }
-//   }
-  
-
-
-
 // Вийти
 document.getElementById('logoutButton')?.addEventListener('click', () => {
     localStorage.removeItem('token');
@@ -191,9 +179,6 @@ function removeFromSelectedServices(serviceId) {
     updateSelectedServicesList();
 }
 
-
-
-
 // Отримати профіль користувача
 async function fetchUserProfile() {
     try {
@@ -218,10 +203,6 @@ async function fetchUserProfile() {
         showMessage('loginMessage', error.message, false);
     }
 }
-
-
-
-
 // Поповнення балансу
 document.getElementById('topUpBalanceForm')?.addEventListener('submit', async (e) => {
     e.preventDefault();
@@ -264,8 +245,30 @@ async function changePassword(oldPassword, newPassword) {
 }
 
 
- // Створити замовлення з обраних сервісів
- document.getElementById('createOrderButton').addEventListener('click', async (event) => {
+function updateTotalPrice() {
+    const totalPrice = selectedServices.reduce((sum, service) => sum + (service.price || 0), 0);
+    document.getElementById('totalPrice').innerText = `Загальна ціна: ${totalPrice} грн`;
+}
+
+
+document.querySelectorAll('.service-checkbox').forEach((checkbox) => {
+    checkbox.addEventListener('change', (event) => {
+        const serviceId = event.target.value;
+        if (event.target.checked) {
+            const selectedService = availableServices.find(service => service.id === serviceId);
+            selectedServices.push(selectedService);
+        } else {
+            const serviceIndex = selectedServices.findIndex(service => service.id === serviceId);
+            if (serviceIndex > -1) {
+                selectedServices.splice(serviceIndex, 1);
+            }
+        }
+        updateTotalPrice(); // Оновлюємо загальну ціну
+    });
+});
+
+// Обробник події для створення кошторису
+document.getElementById('createOrderButton').addEventListener('click', async (event) => {
     event.preventDefault(); // Запобігає оновленню сторінки
 
     try {
@@ -297,9 +300,6 @@ async function changePassword(oldPassword, newPassword) {
         showMessage('orderMessage', error.message, false);
     }
 });
-
-
-
 
 // Зміна профілю
 async function updateProfileInfo(firstName, lastName, vinCode) {
@@ -384,10 +384,6 @@ document.getElementById('updatePasswordForm').addEventListener('submit', (e) => 
     updatePasswordInfo(oldPassword, newPassword);
 });
 
-
-
-
-// Отримати всі сервіси
 // Отримати всі сервіси
 async function fetchServices() {
     try {

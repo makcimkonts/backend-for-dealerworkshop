@@ -127,7 +127,9 @@
 <h1>Сервіси</h1>
 
 <div>
-    <button onclick="createService()">Create New Service</button>
+    <label for="vinCodeFilter">Фільтрувати за VIN-кодом:</label>
+    <input type="text" id="vinCodeFilter" placeholder="Введіть VIN-код" oninput="filterByVinCode()">
+    <button onclick="createService()">Створити новий сервіс</button>
 </div>
 
 <table id="servicesTable">

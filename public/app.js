@@ -555,6 +555,10 @@ async function completeOrder(orderId) {
 
 
 ////////
+
+
+
+
 // Function to create a new service or edit an existing one
 function createService() {
     document.getElementById('serviceId').value = ''; // Reset the form
@@ -622,6 +626,21 @@ document.getElementById('serviceForm').addEventListener('submit', async (e) => {
     }
 });
 
+function filterByVinCode() {
+    const vinCodeFilter = document.getElementById('vinCodeFilter').value.toLowerCase();
+    
+    const rows = document.querySelectorAll('#servicesTable tbody tr');
+    
+    rows.forEach(row => {
+        const vinCode = row.cells[3].textContent.toLowerCase(); // VIN-код знаходиться в 4-му стовпці
+        if (vinCode.includes(vinCodeFilter)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
 // Function to get and display services
 async function getServices() {
     try {
@@ -633,7 +652,7 @@ async function getServices() {
         });
 
         if (!response.ok) {
-            throw new Error('Failed to fetch services');
+            throw new Error('Не вдалося завантажити сервіси');
         }
 
         const data = await response.json();
@@ -642,7 +661,7 @@ async function getServices() {
 
         data.forEach(service => {
             const price = parseFloat(service.price);
-            row = servicesTable.insertRow();
+            const row = servicesTable.insertRow();
             row.setAttribute('data-id', service.id);
             row.innerHTML = `
                 <td>${service.service_name}</td>
@@ -650,13 +669,13 @@ async function getServices() {
                 <td>${isNaN(price) ? 'N/A' : price.toFixed(2)} грн</td>
                 <td>${service.vin_code || 'N/A'}</td> <!-- Відображення VIN-коду -->
                 <td>
-                    <button onclick="editService(${service.id})">Edit</button>
-                    <button onclick="deleteService(${service.id})">Delete</button>
+                    <button onclick="editService(${service.id})">Редагувати</button>
+                    <button onclick="deleteService(${service.id})">Видалити</button>
                 </td>
             `;
         });
     } catch (error) {
-        console.error('Error fetching services:', error);
+        console.error('Помилка при отриманні сервісів:', error);
         showErrorToUser('Не вдалося завантажити сервіси');
     }
 }

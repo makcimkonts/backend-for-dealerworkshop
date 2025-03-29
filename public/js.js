@@ -156,6 +156,7 @@ async function addToSelectedServices(serviceId, serviceName, price, serviceVin) 
         // Якщо сервіс підходить, додаємо його до списку
         selectedServices.push({ id: serviceId, name: serviceName, price: price });
         updateSelectedServicesList();
+        updateTotalPrice(); // Оновлення загальної вартості
         showMessage('orderMessage', 'Сервіс успішно додано до кошторису.', true);
     } catch (error) {
         showMessage('orderMessage', error.message, false);
@@ -171,6 +172,8 @@ function updateSelectedServicesList() {
             <button onclick="removeFromSelectedServices(${service.id})">Видалити</button>
         </li>
     `).join('');
+
+    updateTotalPrice(); // Оновлення загальної вартості після оновлення списку
 }
 
 // Видалення послуги з вибраних
@@ -465,6 +468,15 @@ async function handleAddToQuote(serviceId, serviceName, servicePrice, serviceVin
     }
 }
 // Отримання історії замовлень
+function translateStatus(status) {
+    const statusMap = {
+        'Pending': 'Очікується',
+        'Confirmed': 'Підтверджено',
+        'Completed': 'Завершено',
+        'Paid': 'Оплачено'
+    };
+    return statusMap[status] || status;
+}
 async function fetchOrders(userId) {
     try {
         const response = await fetch(`${API_BASE_URL}/orders/${userId}`, {
@@ -481,7 +493,7 @@ async function fetchOrders(userId) {
             <tr>
                 <td>${order.id}</td>
                 <td>${order.services.map(s => s.name).join(', ')}</td>
-                <td>${order.status}</td>
+                <td>${translateStatus(order.status)}</td>  <!-- Переклад статусу -->
                 <td>${order.total_price || 'Невідомо'} грн</td>
                 <td>
                     ${order.status === 'Pending' ? `
@@ -497,6 +509,7 @@ async function fetchOrders(userId) {
         showMessage('orderMessage', error.message, false);
     }
 }
+
 
 
 // Функція для скасування замовлення

@@ -138,16 +138,20 @@ const getOrdersForUser = async (req, res) => {
                 };
             }
 
-            // Додаємо послугу до поточного замовлення
-            currentOrder.services.push({
-                id: order.service_id,
-                name: order.service_name,
-                price: order.price,
-                vin_code: order.vin_code,
-            });
+            // Перевірка, щоб уникнути NaN в загальній вартості
+            const servicePrice = parseFloat(order.price);
+            if (!isNaN(servicePrice)) {
+                // Додаємо послугу до поточного замовлення
+                currentOrder.services.push({
+                    id: order.service_id,
+                    name: order.service_name,
+                    price: servicePrice,
+                    vin_code: order.vin_code,
+                });
 
-            // Додаємо вартість послуги до загальної вартості
-            currentOrder.total_price += parseFloat(order.price);
+                // Додаємо вартість послуги до загальної вартості
+                currentOrder.total_price += servicePrice;
+            }
         });
 
         // Додаємо останнє замовлення в масив
@@ -161,6 +165,7 @@ const getOrdersForUser = async (req, res) => {
         res.status(500).json({ message: 'Помилка при отриманні замовлень' });
     }
 };
+
 
 
 // Оновлення статусу замовлення
@@ -390,41 +395,53 @@ const validateServiceByVin = async (req, res) => {
 
 // Функція для отримання історії замовлень користувача
 const getOrderHistory = async (req, res) => {
-    const userId = Number(req.params.userId); // Переконуємося, що це число
-    if (!userId) {
-        return res.status(400).json({ message: 'Invalid user ID' });
-    }
-
+    const userId = Number(req.params.userId);
+    
     try {
-        console.log("Fetching orders for user ID:", userId);
+        // 1. Отримуємо основну інформацію про замовлення
+        const [orders] = await db.execute(`
+            SELECT o.id, o.total_price, o.status, o.created_at, o.updated_at
+            FROM orders o
+            WHERE o.user_id = ?
+            ORDER BY o.created_at DESC
+        `, [userId]);
 
-        const [orders] = await db.execute(
-            'SELECT id, total_price, status, created_at, updated_at FROM orders WHERE user_id = ? ORDER BY created_at DESC',
+        if (!orders.length) {
+            return res.status(404).json({ message: 'Замовлення не знайдено' });
+        }
+
+        // 2. Отримуємо послуги для кожного замовлення
+        const ordersWithServices = await Promise.all(orders.map(async (order) => {
+            const [services] = await db.execute(`
+                SELECT s.id, s.service_name, s.price
+                FROM order_services os
+                JOIN services s ON os.service_id = s.id
+                WHERE os.order_id = ?
+            `, [order.id]);
+
+            return {
+                ...order,
+                services: services || [],
+                service: services.map(s => s.service_name).join(', '), // Для сумісності
+                price: order.total_price // Явно вказуємо ціну
+            };
+        }));
+
+        // 3. Отримуємо інформацію про користувача
+        const [user] = await db.execute(
+            'SELECT first_name, last_name, vin_code FROM users WHERE id = ?',
             [userId]
         );
 
-        console.log("Orders found:", orders); // Додаємо логування
+        res.json({
+            user_name: user.length ? `${user[0].first_name} ${user[0].last_name}` : 'Невідомий користувач',
+            user_vin: user.length ? user[0].vin_code : 'Невідомий VIN',
+            orders: ordersWithServices
+        });
 
-        if (!orders.length) {
-            return res.status(404).json({ message: 'No orders found for this user.' });
-        }
-
-        const ordersWithServices = await Promise.all(orders.map(async (order) => {
-            const [services] = await db.execute(
-                'SELECT os.service_id, s.service_name FROM order_services os JOIN services s ON os.service_id = s.id WHERE os.order_id = ?',
-                [order.id]
-            );
-            order.services = services || [];
-            return order;
-        }));
-
-        console.log("Final orders:", ordersWithServices); // Логування для перевірки
-
-
-        res.status(200).json(ordersWithServices);
     } catch (error) {
-        console.error('Database error:', error);
-        res.status(500).json({ message: 'Error fetching order history.' });
+        console.error('Помилка:', error);
+        res.status(500).json({ message: 'Помилка сервера' });
     }
 };
 

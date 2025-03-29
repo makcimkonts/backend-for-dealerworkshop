@@ -23,11 +23,11 @@ router.post('/:orderId/pay', authenticateToken, orderController.payForOrder);
 router.post('/status/reset/:orderId', authenticateToken, authenticateManager, orderController.resetOrderStatus);
 // Скасування замовлення
 
-// router.post('/orders/:id/cancel', authenticateToken, authenticateManager, orderController.cancelOrder);
+// router.post('/orders/:id/cancel', authenticateToken, orderController.cancelOrder);
 router.post('/:id/cancel', (req, res, next) => {
     console.log('Received request to cancel order:', req.params.id); // Логування ID замовлення
     next();
-}, authenticateToken, authenticateManager, orderController.cancelOrder);
+}, authenticateToken, orderController.cancelOrder);
 
 router.post('/validate', orderController.validateServiceByVin);
 
@@ -35,7 +35,6 @@ router.post('/validate', orderController.validateServiceByVin);
 router.put('/:orderId/complete', authenticateToken, authenticateManager, orderController.completeOrder);
 
 
-router.get('/order-history/:id', authenticateToken,authenticateManager, orderController.getOrderHistory);
-
+router.get('/order-history/:userId', authenticateToken, authenticateManager, orderController.getOrderHistory);
 
 module.exports = router;

@@ -455,58 +455,80 @@ async function loadServicesForDropdown() {
 }
 
 async function getOrdersByUser(userId) {
+    if (!userId) {
+        console.error('Поле userId порожнє');
+        showErrorToUser('Не вказано ID користувача');
+        return;
+    }
+
     try {
-        const response = await fetch(`${API_BASE_URL}orders/${userId}`, {
+        // Отримуємо всі дані за один запит
+        const response = await fetch(`${API_BASE_URL}orders/order-history/${userId}`, {
             method: 'GET',
             headers: { 'Authorization': `Bearer ${token}` }
         });
 
-        if (!response.ok) throw new Error('Failed to fetch user orders');
+        if (!response.ok) {
+            throw new Error('Не вдалося отримати історію замовлень');
+        }
 
-        const orders = await response.json();
-        renderUserOrders(orders);
+        const data = await response.json();
+        
+        // Якщо відповідь містить масив замовлень
+        if (Array.isArray(data.orders)) {
+            const ordersWithUserInfo = data.orders.map(order => ({
+                ...order,
+                user_name: data.user_name || 'Невідомий користувач',
+                user_vin: data.user_vin || 'Невідомий VIN'
+            }));
+            renderUserOrders(ordersWithUserInfo);
+        } else {
+            // Якщо формат відповіді інший (наприклад, старий варіант)
+            renderUserOrders(data);
+        }
     } catch (error) {
-        console.error('Error fetching user orders:', error);
-        showErrorToUser('Не вдалося завантажити замовлення користувача');
+        console.error('Помилка при отриманні замовлень:', error);
+        showErrorToUser('Не вдалося завантажити замовлення користувача: ' + error.message);
     }
 }
 
 function renderUserOrders(orders) {
-    const userOrdersTable = document.getElementById('userOrdersTable');
-    if (!userOrdersTable) return;
+    const modal = document.getElementById('userOrdersModal');
+    const tbody = document.querySelector('#userOrdersTable tbody');
     
-    const tbody = userOrdersTable.getElementsByTagName('tbody')[0];
-    if (!tbody) return;
+    if (!modal || !tbody) {
+        console.error('Не знайдено модального вікна або таблиці');
+        return;
+    }
     
     tbody.innerHTML = '';
     
-    if (!orders || !Array.isArray(orders)) {
-        tbody.innerHTML = '<tr><td colspan="6">Немає замовлень цього користувача</td></tr>';
-        return;
-    }
-    
-    if (orders.length === 0) {
+    if (!orders || orders.length === 0) {
         tbody.innerHTML = '<tr><td colspan="6">Користувач не має замовлень</td></tr>';
-        return;
+    } else {
+        orders.forEach(order => {
+            const row = tbody.insertRow();
+            row.innerHTML = `
+                <td>${order.service || 'Невідома послуга'}</td>
+                <td>${order.vin_code || order.user_vin || 'Невідомий VIN'}</td>
+                <td>${translateStatus(order.status || 'Pending')}</td>
+                <td>${order.price ? parseFloat(order.price).toFixed(2) : '0.00'} грн</td>
+                <td>
+                    ${order.created_at ? new Date(order.created_at).toLocaleString() : 'Невідомо'} / 
+                    ${order.updated_at ? new Date(order.updated_at).toLocaleString() : 'Невідомо'}
+                </td>
+                <td>
+                    <button onclick="changeStatus(${order.id}, '${order.status}')">Змінити статус</button>
+                </td>
+            `;
+        });
     }
     
-    orders.forEach(order => {
-        const row = tbody.insertRow();
-        row.innerHTML = `
-            <td>${order.service || 'Невідома послуга'}</td>
-            <td>${order.vin_code || 'Невідомий VIN'}</td>
-            <td>${translateStatus(order.status || 'Pending')}</td>
-            <td>${order.price ? order.price.toFixed(2) : '0.00'} грн</td>
-            <td>${new Date(order.created_at).toLocaleString()}</td>
-            <td>
-                <button onclick="changeStatus(${order.id}, '${order.status}')">Змінити статус</button>
-            </td>
-        `;
-    });
-    
-    // Show the user orders modal
-    document.getElementById('userOrdersModal').style.display = 'block';
+    // Показуємо модальне вікно
+    modal.style.display = 'block';
 }
+
+
 
 function closeUserOrdersModal() {
     document.getElementById('userOrdersModal').style.display = 'none';
